@@ -51,11 +51,11 @@ export default function AdminTabs({ adminData, onLogout }) {
         component={AdminMarketsScreen} 
         options={{ headerShown: false, tabBarIcon: ({ color }) => <Trophy color={color} size={24} /> }}
       />
-      <Tab.Screen 
+      {/* <Tab.Screen 
         name="Markets" 
         component={AdminMarketScreen} 
         options={{ tabBarIcon: ({ color }) => <LayoutDashboard color={color} size={24} /> }}
-      />
+      /> */}
       <Tab.Screen 
         name="Users" 
         component={AdminUserScreen} 

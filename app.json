@@ -17,7 +17,8 @@
         "foregroundImage": "./assets/admin_icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.megaplayadmin"
     },
     "web": {
       "output": "static",
@@ -42,6 +43,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2951ce8f-2e7e-459a-a9bc-2b3bdca9c9b5"
+      }
     }
   }
 }
