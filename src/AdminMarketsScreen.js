@@ -46,6 +46,18 @@
 //   return now >= openDate && now <= closeDate;
 // };
 
+// // Helper function to check if a specific time has passed today
+// const hasTimePassed = (timeStr) => {
+//   if (!timeStr) return false;
+
+//   const now = new Date();
+//   const [hour, min] = timeStr.split(":").map(Number);
+//   const targetDate = new Date();
+//   targetDate.setHours(hour, min, 0, 0);
+
+//   return now >= targetDate;
+// };
+
 // export default function AdminMarketsScreen() {
 //   const [markets, setMarkets] = useState([]);
 //   const [loading, setLoading] = useState(true);
@@ -80,95 +92,263 @@
 //   const [showOpenPicker, setShowOpenPicker] = useState(false);
 //   const [showClosePicker, setShowClosePicker] = useState(false);
 
-//   const fetchMarkets = async () => {
-//     setLoading(true);
-//     try {
-//       const response = await api.get("/admin/all");
-//       setMarkets(response.data);
-//     } catch (error) {
-//       try {
-//         const fallbackRes = await api.get("/markets");
-//         setMarkets(fallbackRes.data);
-//       } catch (err) {
-//         Alert.alert("Error", "Failed to fetch markets");
-//       }
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+//   const [activeTab, setActiveTab] = useState("MAIN");
 
-//   useFocusEffect(
-//     useCallback(() => {
-//       fetchMarkets();
-//     }, []),
-//   );
+//   // --- ADD RESULT TIME STATES ---
+// const [newResultTime, setNewResultTime] = useState("");
+// const [showResultPicker, setShowResultPicker] = useState(false);
+
+// const [editResultTime, setEditResultTime] = useState("");
+// const [showEditResultPicker, setShowEditResultPicker] = useState(false);
+
+// // --- TIME PICKER HANDLERS ---
+// const onResultTimeChange = (event, selectedDate) => {
+//   setShowResultPicker(Platform.OS === "ios");
+//   if (selectedDate) {
+//     setNewResultTime(formatTime(selectedDate));
+//   }
+// };
+
+// const onEditResultTimeChange = (event, selectedDate) => {
+//   setShowEditResultPicker(Platform.OS === "ios");
+//   if (selectedDate) {
+//     setEditResultTime(formatTime(selectedDate));
+//   }
+// };
+
+//   // const fetchMarkets = async () => {
+//   //   setLoading(true);
+//   //   try {
+//   //     const response = await api.get("/admin/all");
+//   //     setMarkets(response.data);
+//   //   } catch (error) {
+//   //     try {
+//   //       const fallbackRes = await api.get("/markets");
+//   //       setMarkets(fallbackRes.data);
+//   //     } catch (err) {
+//   //       Alert.alert("Error", "Failed to fetch markets");
+//   //     }
+//   //   } finally {
+//   //     setLoading(false);
+//   //   }
+//   // };
+
+//   // useFocusEffect(
+//   //   useCallback(() => {
+//   //     fetchMarkets();
+//   //   }, []),
+//   // );
 
 //   // --- TOGGLE / PAUSE MARKET ---
-//   const handleToggleActive = async (market) => {
-//     const updatedStatus = !market.is_active;
+  
+// //   const fetchMarkets = async () => {
+// //   setLoading(true);
+// //   try {
+// //     const endpoint =
+// //       activeTab === "GALI_DESAWAR"
+// //         ? "/admin/gali-desawar/markets"
+// //         : "/admin/all";
 
-//     setMarkets((prev) =>
-//       prev.map((m) =>
-//         m.id === market.id ? { ...m, is_active: updatedStatus } : m,
-//       ),
-//     );
+// //     const response = await api.get(endpoint);
+// //     setMarkets(response.data);
+// //   } catch (error) {
+// //     try {
+// //       const fallbackEndpoint =
+// //         activeTab === "GALI_DESAWAR"
+// //           ? "/gali-desawar/markets"
+// //           : "/markets";
 
+// //       const fallbackRes = await api.get(fallbackEndpoint);
+// //       setMarkets(fallbackRes.data);
+// //     } catch (err) {
+// //       Alert.alert("Error", "Failed to fetch markets");
+// //     }
+// //   } finally {
+// //     setLoading(false);
+// //   }
+// // };
+
+// // useFocusEffect(
+// //   useCallback(() => {
+// //     fetchMarkets();
+// //   }, [activeTab]) // Re-fetch whenever user switches tabs
+// // );
+  
+
+// // --- 1. TAB CHANGE HANDLER ---
+// const handleTabChange = (tab) => {
+//   setActiveTab(tab);
+//   fetchMarkets(tab); // Pass tab directly to prevent stale state issues
+// };
+
+// // --- 2. UPDATED FETCH FUNCTION ---
+// const fetchMarkets = async (targetTab = activeTab) => {
+//   setLoading(true);
+//   try {
+//     const endpoint =
+//       targetTab === "GALI_DESAWAR"
+//         ? "/admin/gali-desawar/markets"
+//         : "/admin/all";
+
+//     const response = await api.get(endpoint);
+//     setMarkets(response.data);
+//   } catch (error) {
 //     try {
-//       await api.patch(`/markets/toggle-status/${market.id}`, {
-//         is_active: updatedStatus,
-//       });
-//     } catch (error) {
-//       try {
-//         await api.put(`/admin/markets/${market.id}`, {
-//           is_active: updatedStatus,
-//         });
-//       } catch (err) {
-//         try {
-//           await api.put(`/markets/update/${market.id}`, {
-//             is_active: updatedStatus,
-//           });
-//         } catch (finalErr) {
-//           Alert.alert("Failed", "Could not update market status.");
-//           fetchMarkets();
-//         }
-//       }
+//       const fallbackEndpoint =
+//         targetTab === "GALI_DESAWAR"
+//           ? "/gali-desawar/markets"
+//           : "/markets";
+
+//       const fallbackRes = await api.get(fallbackEndpoint);
+//       setMarkets(fallbackRes.data);
+//     } catch (err) {
+//       // Clear markets list so old Main Markets don't stay visible
+//       setMarkets([]);
+      
+//       // Log full error in console for debugging
+//       console.log("Fetch Error Details:", err.response?.data || err.message);
+
+//       const errorMessage =
+//         err.response?.data?.message ||
+//         err.response?.data?.error ||
+//         "Failed to fetch markets";
+
+//       Alert.alert("Error", errorMessage);
 //     }
-//   };
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+// // --- 3. FOCUS EFFECT ---
+// useFocusEffect(
+//   useCallback(() => {
+//     fetchMarkets(activeTab);
+//   }, [activeTab])
+// );
+
+
+//   // const handleToggleActive = async (market) => {
+//   //   const updatedStatus = !market.is_active;
+
+//   //   setMarkets((prev) =>
+//   //     prev.map((m) =>
+//   //       m.id === market.id ? { ...m, is_active: updatedStatus } : m,
+//   //     ),
+//   //   );
+
+//   //   try {
+//   //     await api.patch(`/markets/toggle-status/${market.id}`, {
+//   //       is_active: updatedStatus,
+//   //     });
+//   //   } catch (error) {
+//   //     try {
+//   //       await api.put(`/admin/markets/${market.id}`, {
+//   //         is_active: updatedStatus,
+//   //       });
+//   //     } catch (err) {
+//   //       try {
+//   //         await api.put(`/markets/update/${market.id}`, {
+//   //           is_active: updatedStatus,
+//   //         });
+//   //       } catch (finalErr) {
+//   //         Alert.alert("Failed", "Could not update market status.");
+//   //         fetchMarkets();
+//   //       }
+//   //     }
+//   //   }
+//   // };
 
 //   // --- DELETE MARKET ---
-//   const handleDeleteMarket = (market) => {
-//     Alert.alert(
-//       "Delete Market",
-//       `Are you sure you want to delete "${market.name}"? This action cannot be undone.`,
-//       [
-//         { text: "Cancel", style: "cancel" },
-//         {
-//           text: "Delete",
-//           style: "destructive",
-//           onPress: async () => {
-//             try {
-//               await api.delete(`/markets/delete/${market.id}`);
-//               fetchMarkets();
-//             } catch (error) {
-//               try {
-//                 await api.delete(`/admin/markets/${market.id}`);
-//                 fetchMarkets();
-//               } catch (err) {
-//                 try {
-//                   await api.delete(`/markets/${market.id}`);
-//                   fetchMarkets();
-//                 } catch (finalErr) {
-//                   Alert.alert("Error", "Failed to delete market.");
-//                 }
-//               }
-//             }
-//           },
-//         },
-//       ],
-//     );
-//   };
+  
+//   const handleToggleActive = async (market) => {
+//   const updatedStatus = !market.is_active;
+
+//   setMarkets((prev) =>
+//     prev.map((m) =>
+//       m.id === market.id ? { ...m, is_active: updatedStatus } : m
+//     )
+//   );
+
+//   const endpoint =
+//     activeTab === "GALI_DESAWAR"
+//       ? `/admin/gali-desawar/markets/${market.id}/status`
+//       : `/markets/toggle-status/${market.id}`;
+
+//   try {
+//     if (activeTab === "GALI_DESAWAR") {
+//       await api.patch(endpoint, { status: updatedStatus ? "ACTIVE" : "PAUSED" });
+//     } else {
+//       await api.patch(endpoint, { is_active: updatedStatus });
+//     }
+//   } catch (error) {
+//     Alert.alert("Failed", "Could not update market status.");
+//     fetchMarkets();
+//   }
+// };
+  
+//   // const handleDeleteMarket = (market) => {
+//   //   Alert.alert(
+//   //     "Delete Market",
+//   //     `Are you sure you want to delete "${market.name}"? This action cannot be undone.`,
+//   //     [
+//   //       { text: "Cancel", style: "cancel" },
+//   //       {
+//   //         text: "Delete",
+//   //         style: "destructive",
+//   //         onPress: async () => {
+//   //           try {
+//   //             await api.delete(`/markets/delete/${market.id}`);
+//   //             fetchMarkets();
+//   //           } catch (error) {
+//   //             try {
+//   //               await api.delete(`/admin/markets/${market.id}`);
+//   //               fetchMarkets();
+//   //             } catch (err) {
+//   //               try {
+//   //                 await api.delete(`/markets/${market.id}`);
+//   //                 fetchMarkets();
+//   //               } catch (finalErr) {
+//   //                 Alert.alert("Error", "Failed to delete market.");
+//   //               }
+//   //             }
+//   //           }
+//   //         },
+//   //       },
+//   //     ],
+//   //   );
+//   // };
+
+
 
 //   // --- TIME PICKER HELPERS ---
+  
+//   const handleDeleteMarket = (market) => {
+//   Alert.alert(
+//     "Delete Market",
+//     `Are you sure you want to delete "${market.name}"? This action cannot be undone.`,
+//     [
+//       { text: "Cancel", style: "cancel" },
+//       {
+//         text: "Delete",
+//         style: "destructive",
+//         onPress: async () => {
+//           const endpoint =
+//             activeTab === "GALI_DESAWAR"
+//               ? `/admin/gali-desawar/markets/${market.id}`
+//               : `/markets/delete/${market.id}`;
+//           try {
+//             await api.delete(endpoint);
+//             fetchMarkets();
+//           } catch (error) {
+//             Alert.alert("Error", "Failed to delete market.");
+//           }
+//         },
+//       },
+//     ]
+//   );
+// };
+  
 //   const formatTime = (date) => {
 //     const hours = date.getHours().toString().padStart(2, "0");
 //     const minutes = date.getMinutes().toString().padStart(2, "0");
@@ -190,102 +370,295 @@
 //   };
 
 //   // --- CREATE MARKET ---
-//   const handleCreateMarket = async () => {
-//     if (!newName.trim() || !newOpenTime || !newCloseTime) {
-//       Alert.alert("Validation Error", "Please enter market name and betting times.");
-//       return;
-//     }
+//   // const handleCreateMarket = async () => {
+//   //   if (!newName.trim() || !newOpenTime || !newCloseTime) {
+//   //     Alert.alert("Validation Error", "Please enter market name and betting times.");
+//   //     return;
+//   //   }
 
-//     setIsCreating(true);
-//     const payload = {
-//       name: newName,
-//       open_time: newOpenTime,
-//       close_time: newCloseTime,
-//       open_result_time: newOpenResultTime || newOpenTime,
-//       close_result_time: newCloseResultTime || newCloseTime,
-//     };
+//   //   setIsCreating(true);
+//   //   const payload = {
+//   //     name: newName,
+//   //     open_time: newOpenTime,
+//   //     close_time: newCloseTime,
+//   //     open_result_time: newOpenResultTime || newOpenTime,
+//   //     close_result_time: newCloseResultTime || newCloseTime,
+//   //   };
 
-//     try {
-//       await api.post("/markets/add", payload);
-//       Alert.alert("Success", "New market created!");
-//       setAddModalVisible(false);
-//       resetNewMarketForm();
-//       fetchMarkets();
-//     } catch (error) {
-//       try {
-//         await api.post("/admin/markets", payload);
-//         Alert.alert("Success", "New market created!");
-//         setAddModalVisible(false);
-//         resetNewMarketForm();
-//         fetchMarkets();
-//       } catch (err) {
-//         Alert.alert("Error", err.response?.data?.error || "Failed to create market.");
-//       }
-//     } finally {
-//       setIsCreating(false);
-//     }
-//   };
+//   //   try {
+//   //     await api.post("/markets/add", payload);
+//   //     Alert.alert("Success", "New market created!");
+//   //     setAddModalVisible(false);
+//   //     resetNewMarketForm();
+//   //     fetchMarkets();
+//   //   } catch (error) {
+//   //     try {
+//   //       await api.post("/admin/markets", payload);
+//   //       Alert.alert("Success", "New market created!");
+//   //       setAddModalVisible(false);
+//   //       resetNewMarketForm();
+//   //       fetchMarkets();
+//   //     } catch (err) {
+//   //       Alert.alert("Error", err.response?.data?.error || "Failed to create market.");
+//   //     }
+//   //   } finally {
+//   //     setIsCreating(false);
+//   //   }
+//   // };
+
+// //   const handleCreateMarket = async () => {
+// //   if (!newName.trim() || !newOpenTime || !newCloseTime) {
+// //     Alert.alert("Validation Error", "Please enter market name and betting times.");
+// //     return;
+// //   }
+
+// //   setIsCreating(true);
+// //   const payload = {
+// //     name: newName,
+// //     open_time: newOpenTime,
+// //     close_time: newCloseTime,
+// //     open_result_time: newOpenResultTime || newOpenTime,
+// //     close_result_time: newCloseResultTime || newCloseTime,
+// //   };
+
+// //   const endpoint =
+// //     activeTab === "GALI_DESAWAR"
+// //       ? "/admin/gali-desawar/markets"
+// //       : "/markets/add";
+
+// //   try {
+// //     await api.post(endpoint, payload);
+// //     Alert.alert("Success", "New market created!");
+// //     setAddModalVisible(false);
+// //     resetNewMarketForm();
+// //     fetchMarkets();
+// //   } catch (error) {
+// //     Alert.alert("Error", error.response?.data?.error || "Failed to create market.");
+// //   } finally {
+// //     setIsCreating(false);
+// //   }
+// // };
+
+//   // const resetNewMarketForm = () => {
+//   //   setNewName("");
+//   //   setNewOpenTime("");
+//   //   setNewCloseTime("");
+//   //   setNewOpenResultTime("");
+//   //   setNewCloseResultTime("");
+//   // };
+
+//   // // --- EDIT MARKET ---
+//   // const openEditModal = (market) => {
+//   //   setSelectedMarket(market);
+//   //   setEditName(market.name || "");
+//   //   setEditOpenTime(market.open_time || "");
+//   //   setEditCloseTime(market.close_time || "");
+//   //   setEditOpenResultTime(market.open_result_time || market.open_time || "");
+//   //   setEditCloseResultTime(market.close_result_time || market.close_time || "");
+//   //   setEditIsActive(market.is_active ?? true);
+//   //   setEditModalVisible(true);
+//   // };
 
 //   const resetNewMarketForm = () => {
-//     setNewName("");
-//     setNewOpenTime("");
-//     setNewCloseTime("");
-//     setNewOpenResultTime("");
-//     setNewCloseResultTime("");
-//   };
+//   setNewName("");
+//   setNewOpenTime("");
+//   setNewCloseTime("");
+//   setNewOpenResultTime("");
+//   setNewCloseResultTime("");
+//   setNewResultTime("");
+// };
 
-//   // --- EDIT MARKET ---
-//   const openEditModal = (market) => {
-//     setSelectedMarket(market);
-//     setEditName(market.name || "");
-//     setEditOpenTime(market.open_time || "");
-//     setEditCloseTime(market.close_time || "");
-//     setEditOpenResultTime(market.open_result_time || market.open_time || "");
-//     setEditCloseResultTime(market.close_result_time || market.close_time || "");
-//     setEditIsActive(market.is_active ?? true);
-//     setEditModalVisible(true);
-//   };
+// const openEditModal = (market) => {
+//   setSelectedMarket(market);
+//   setEditName(market.name || "");
+//   setEditOpenTime(market.open_time || "");
+//   setEditCloseTime(market.close_time || "");
+//   setEditOpenResultTime(market.open_result_time || market.open_time || "");
+//   setEditCloseResultTime(market.close_result_time || market.close_time || "");
+//   setEditResultTime(market.result_time || "");
+//   setEditIsActive(market.is_active ?? true);
+//   setEditModalVisible(true);
+// };
 
-//   const handleSaveEditMarket = async () => {
-//     if (!editName.trim()) {
-//       Alert.alert("Validation Error", "Market name cannot be empty.");
-//       return;
-//     }
+//   // const handleSaveEditMarket = async () => {
+//   //   if (!editName.trim()) {
+//   //     Alert.alert("Validation Error", "Market name cannot be empty.");
+//   //     return;
+//   //   }
 
-//     setIsSavingEdit(true);
-//     const payload = {
-//       name: editName,
-//       open_time: editOpenTime,
-//       close_time: editCloseTime,
-//       open_result_time: editOpenResultTime,
-//       close_result_time: editCloseResultTime,
-//       is_active: editIsActive,
-//     };
+//   //   setIsSavingEdit(true);
+//   //   const payload = {
+//   //     name: editName,
+//   //     open_time: editOpenTime,
+//   //     close_time: editCloseTime,
+//   //     open_result_time: editOpenResultTime,
+//   //     close_result_time: editCloseResultTime,
+//   //     is_active: editIsActive,
+//   //   };
 
-//     try {
-//       await api.put(`/admin/markets/${selectedMarket.id}`, payload);
-//       Alert.alert("Success", "Market updated successfully!");
-//       setEditModalVisible(false);
-//       fetchMarkets();
-//     } catch (error) {
-//       try {
-//         await api.put(`/markets/update/${selectedMarket.id}`, payload);
-//         Alert.alert("Success", "Market updated successfully!");
-//         setEditModalVisible(false);
-//         fetchMarkets();
-//       } catch (err) {
-//         Alert.alert("Error", "Failed to update market.");
-//       }
-//     } finally {
-//       setIsSavingEdit(false);
-//     }
-//   };
+//   //   try {
+//   //     await api.put(`/admin/markets/${selectedMarket.id}`, payload);
+//   //     Alert.alert("Success", "Market updated successfully!");
+//   //     setEditModalVisible(false);
+//   //     fetchMarkets();
+//   //   } catch (error) {
+//   //     try {
+//   //       await api.put(`/markets/update/${selectedMarket.id}`, payload);
+//   //       Alert.alert("Success", "Market updated successfully!");
+//   //       setEditModalVisible(false);
+//   //       fetchMarkets();
+//   //     } catch (err) {
+//   //       Alert.alert("Error", "Failed to update market.");
+//   //     }
+//   //   } finally {
+//   //     setIsSavingEdit(false);
+//   //   }
+//   // };
 
 //   // --- DECLARE RESULT (MANUAL DISTRIBUTION) ---
+  
+// //   const handleSaveEditMarket = async () => {
+// //   if (!editName.trim()) {
+// //     Alert.alert("Validation Error", "Market name cannot be empty.");
+// //     return;
+// //   }
+
+// //   setIsSavingEdit(true);
+// //   const payload = {
+// //     name: editName,
+// //     open_time: editOpenTime,
+// //     close_time: editCloseTime,
+// //     open_result_time: editOpenResultTime,
+// //     close_result_time: editCloseResultTime,
+// //     is_active: editIsActive,
+// //   };
+
+// //   const endpoint =
+// //     activeTab === "GALI_DESAWAR"
+// //       ? `/admin/gali-desawar/markets/${selectedMarket.id}`
+// //       : `/admin/markets/${selectedMarket.id}`;
+
+// //   try {
+// //     await api.put(endpoint, payload);
+// //     Alert.alert("Success", "Market updated successfully!");
+// //     setEditModalVisible(false);
+// //     fetchMarkets();
+// //   } catch (error) {
+// //     Alert.alert("Error", "Failed to update market.");
+// //   } finally {
+// //     setIsSavingEdit(false);
+// //   }
+// // };
+
+
+// // --- CREATE MARKET ---
+// const handleCreateMarket = async () => {
+//   if (!newName.trim() || !newOpenTime || !newCloseTime) {
+//     Alert.alert("Validation Error", "Please enter market name and betting times.");
+//     return;
+//   }
+
+//   if (activeTab === "GALI_DESAWAR" && !newResultTime) {
+//     Alert.alert("Validation Error", "Please select a result time.");
+//     return;
+//   }
+
+//   setIsCreating(true);
+
+//   const payload =
+//     activeTab === "GALI_DESAWAR"
+//       ? {
+//           name: newName,
+//           open_time: newOpenTime,
+//           close_time: newCloseTime,
+//           result_time: newResultTime,
+//         }
+//       : {
+//           name: newName,
+//           open_time: newOpenTime,
+//           close_time: newCloseTime,
+//           open_result_time: newOpenResultTime || newOpenTime,
+//           close_result_time: newCloseResultTime || newCloseTime,
+//         };
+
+//   const endpoint =
+//     activeTab === "GALI_DESAWAR"
+//       ? "/admin/gali-desawar/markets"
+//       : "/markets/add";
+
+//   try {
+//     await api.post(endpoint, payload);
+//     Alert.alert("Success", "New market created!");
+//     setAddModalVisible(false);
+//     resetNewMarketForm();
+//     fetchMarkets();
+//   } catch (error) {
+//     Alert.alert("Error", error.response?.data?.error || "Failed to create market.");
+//   } finally {
+//     setIsCreating(false);
+//   }
+// };
+
+// // --- SAVE EDIT MARKET ---
+// const handleSaveEditMarket = async () => {
+//   if (!editName.trim()) {
+//     Alert.alert("Validation Error", "Market name cannot be empty.");
+//     return;
+//   }
+
+//   setIsSavingEdit(true);
+
+//   const payload =
+//     activeTab === "GALI_DESAWAR"
+//       ? {
+//           name: editName,
+//           open_time: editOpenTime,
+//           close_time: editCloseTime,
+//           result_time: editResultTime,
+//           is_active: editIsActive,
+//         }
+//       : {
+//           name: editName,
+//           open_time: editOpenTime,
+//           close_time: editCloseTime,
+//           open_result_time: editOpenResultTime,
+//           close_result_time: editCloseResultTime,
+//           is_active: editIsActive,
+//         };
+
+//   const endpoint =
+//     activeTab === "GALI_DESAWAR"
+//       ? `/admin/gali-desawar/markets/${selectedMarket.id}`
+//       : `/admin/markets/${selectedMarket.id}`;
+
+//   try {
+//     await api.put(endpoint, payload);
+//     Alert.alert("Success", "Market updated successfully!");
+//     setEditModalVisible(false);
+//     fetchMarkets();
+//   } catch (error) {
+//     Alert.alert("Error", "Failed to update market.");
+//   } finally {
+//     setIsSavingEdit(false);
+//   }
+// };
+  
 //   const openDeclareModal = (market) => {
 //     setSelectedMarket(market);
-//     setSession("OPEN");
 //     setWinningNumber("");
+
+//     const isOpenTimePassed = hasTimePassed(market.open_result_time || market.open_time);
+//     const isCloseTimePassed = hasTimePassed(market.close_result_time || market.close_time);
+
+//     // Auto-select session based on which result timing has passed
+//     if (isCloseTimePassed) {
+//       setSession("CLOSE");
+//     } else if (isOpenTimePassed) {
+//       setSession("OPEN");
+//     } else {
+//       setSession("OPEN");
+//     }
+
 //     setDeclareModalVisible(true);
 //   };
 
@@ -329,42 +702,21 @@
 //     }
 //   };
 
-//   // 1. Updated helper function to check if current time is within result window
-// const isTimeWithinWindow = (startTimeStr, endTimeStr, isActive) => {
-//   if (!isActive || !startTimeStr || !endTimeStr) return false;
+//   // Check result session status for currently selected market
+//   const isOpenResultActive = selectedMarket
+//     ? hasTimePassed(selectedMarket.open_result_time || selectedMarket.open_time)
+//     : false;
 
-//   const now = new Date();
-
-//   const [startHour, startMin] = startTimeStr.split(":").map(Number);
-//   const startDate = new Date();
-//   startDate.setHours(startHour, startMin, 0, 0);
-
-//   const [endHour, endMin] = endTimeStr.split(":").map(Number);
-//   const endDate = new Date();
-//   endDate.setHours(endHour, endMin, 0, 0);
-
-//   return now >= startDate && now <= endDate;
-// };
+//   const isCloseResultActive = selectedMarket
+//     ? hasTimePassed(selectedMarket.close_result_time || selectedMarket.close_time)
+//     : false;
 
 //   const renderMarketCard = ({ item }) => {
-//     const isTakingBetsRightNow = isTimeWithinWindow(
-//     item.open_time,
-//     item.close_time,
-//     item.is_active
-//   );
-
-//   // Check if result declaration window is active
-//   const isResultWindowOpen = isTimeWithinWindow(
-//     item.open_result_time || item.open_time,
-//     item.close_result_time || item.close_time,
-//     item.is_active
-//   );
-
-//     // const isTakingBetsRightNow = checkIsMarketOpenRightNow(
-//     //   item.open_time,
-//     //   item.close_time,
-//     //   item.is_active,
-//     // );
+//     const isTakingBetsRightNow = checkIsMarketOpenRightNow(
+//       item.open_time,
+//       item.close_time,
+//       item.is_active,
+//     );
 
 //     return (
 //       <View style={styles.card}>
@@ -443,7 +795,7 @@
 //           <TouchableOpacity
 //             style={[
 //               styles.declareBtn,
-//               !canDeclare ? styles.declareBtnDisabled : null,
+//               isTakingBetsRightNow ? styles.declareBtnDisabled : null,
 //             ]}
 //             onPress={() => openDeclareModal(item)}
 //             disabled={isTakingBetsRightNow}
@@ -465,6 +817,39 @@
 //           Market Management
 //         </Typography>
 //       </View>
+
+
+//       <View style={styles.tabContainer}>
+//   <TouchableOpacity
+//     style={[styles.tabBtn, activeTab === "MAIN" && styles.tabBtnActive]}
+//     onPress={() => handleTabChange("MAIN")}
+//   >
+//     <Typography
+//       weight="700"
+//       style={[styles.tabText, activeTab === "MAIN" && styles.tabTextActive]}
+//     >
+//       Main Markets
+//     </Typography>
+//   </TouchableOpacity>
+
+//   <TouchableOpacity
+//     style={[
+//       styles.tabBtn,
+//       activeTab === "GALI_DESAWAR" && styles.tabBtnActive,
+//     ]}
+//     onPress={() => handleTabChange("GALI_DESAWAR")}
+//   >
+//     <Typography
+//       weight="700"
+//       style={[
+//         styles.tabText,
+//         activeTab === "GALI_DESAWAR" && styles.tabTextActive,
+//       ]}
+//     >
+//       Gali Desawar
+//     </Typography>
+//   </TouchableOpacity>
+// </View>
 
 //       {loading ? (
 //         <ActivityIndicator
@@ -582,7 +967,7 @@
 //                 />
 //               )}
 
-//               <Typography weight="700" style={styles.sectionHeader}>
+//               {/* <Typography weight="700" style={styles.sectionHeader}>
 //                 Result Declaration Timing (Optional)
 //               </Typography>
 //               <View style={styles.timeRow}>
@@ -606,7 +991,67 @@
 //                     placeholderTextColor={theme.colors.textMuted}
 //                   />
 //                 </View>
-//               </View>
+//               </View> */}
+
+//               {activeTab === "GALI_DESAWAR" ? (
+//   <>
+//     <Typography weight="700" style={styles.sectionHeader}>
+//       Result Declaration Timing
+//     </Typography>
+//     <TouchableOpacity
+//       style={styles.timeSelector}
+//       onPress={() => setShowResultPicker(true)}
+//     >
+//       <Typography
+//         style={{
+//           color: newResultTime
+//             ? theme.colors.textDark
+//             : theme.colors.textMuted,
+//         }}
+//       >
+//         {newResultTime ? `Result Time: ${newResultTime}` : "Select Result Time"}
+//       </Typography>
+//       <Clock color={theme.colors.textMuted} size={20} />
+//     </TouchableOpacity>
+
+//     {showResultPicker && (
+//       <DateTimePicker
+//         value={new Date()}
+//         mode="time"
+//         display={Platform.OS === "ios" ? "spinner" : "default"}
+//         onChange={onResultTimeChange}
+//       />
+//     )}
+//   </>
+// ) : (
+//   <>
+//     <Typography weight="700" style={styles.sectionHeader}>
+//       Result Declaration Timing (Optional)
+//     </Typography>
+//     <View style={styles.timeRow}>
+//       <View style={{ flex: 1, marginRight: 8 }}>
+//         <Typography style={styles.label}>Open Result Time</Typography>
+//         <TextInput
+//           style={styles.textInput}
+//           value={newOpenResultTime}
+//           onChangeText={setNewOpenResultTime}
+//           placeholder="08:05:00"
+//           placeholderTextColor={theme.colors.textMuted}
+//         />
+//       </View>
+//       <View style={{ flex: 1, marginLeft: 8 }}>
+//         <Typography style={styles.label}>Close Result Time</Typography>
+//         <TextInput
+//           style={styles.textInput}
+//           value={newCloseResultTime}
+//           onChangeText={setNewCloseResultTime}
+//           placeholder="10:50:00"
+//           placeholderTextColor={theme.colors.textMuted}
+//         />
+//       </View>
+//     </View>
+//   </>
+// )}
 
 //               <TouchableOpacity
 //                 style={[styles.saveBtn, isCreating && { opacity: 0.7 }]}
@@ -627,7 +1072,7 @@
 //       </Modal>
 
 //       {/* --- EDIT MARKET MODAL --- */}
-//       <Modal
+//       {/* <Modal
 //         animationType="slide"
 //         transparent={true}
 //         visible={editModalVisible}
@@ -740,7 +1185,67 @@
 //             </ScrollView>
 //           </View>
 //         </KeyboardAvoidingView>
-//       </Modal>
+//       </Modal> */}
+
+//       {activeTab === "GALI_DESAWAR" ? (
+//   <>
+//     <Typography weight="700" style={styles.sectionHeader}>
+//       Result Declaration Timing
+//     </Typography>
+//     <TouchableOpacity
+//       style={styles.timeSelector}
+//       onPress={() => setShowEditResultPicker(true)}
+//     >
+//       <Typography
+//         style={{
+//           color: editResultTime
+//             ? theme.colors.textDark
+//             : theme.colors.textMuted,
+//         }}
+//       >
+//         {editResultTime ? `Result Time: ${editResultTime}` : "Select Result Time"}
+//       </Typography>
+//       <Clock color={theme.colors.textMuted} size={20} />
+//     </TouchableOpacity>
+
+//     {showEditResultPicker && (
+//       <DateTimePicker
+//         value={new Date()}
+//         mode="time"
+//         display={Platform.OS === "ios" ? "spinner" : "default"}
+//         onChange={onEditResultTimeChange}
+//       />
+//     )}
+//   </>
+// ) : (
+//   <>
+//     <Typography weight="700" style={styles.sectionHeader}>
+//       Result Declaration Timing
+//     </Typography>
+//     <View style={styles.timeRow}>
+//       <View style={{ flex: 1, marginRight: 8 }}>
+//         <Typography style={styles.label}>Open Result Time</Typography>
+//         <TextInput
+//           style={styles.textInput}
+//           value={editOpenResultTime}
+//           onChangeText={setEditOpenResultTime}
+//           placeholder="08:05:00"
+//           placeholderTextColor={theme.colors.textMuted}
+//         />
+//       </View>
+//       <View style={{ flex: 1, marginLeft: 8 }}>
+//         <Typography style={styles.label}>Close Result Time</Typography>
+//         <TextInput
+//           style={styles.textInput}
+//           value={editCloseResultTime}
+//           onChangeText={setEditCloseResultTime}
+//           placeholder="10:50:00"
+//           placeholderTextColor={theme.colors.textMuted}
+//         />
+//       </View>
+//     </View>
+//   </>
+// )}
 
 //       {/* --- DECLARE RESULT MODAL --- */}
 //       <Modal
@@ -781,31 +1286,38 @@
 //                 style={[
 //                   styles.sessionBtn,
 //                   session === "OPEN" && styles.sessionBtnActive,
+//                   !isOpenResultActive && styles.sessionBtnDisabled,
 //                 ]}
 //                 onPress={() => setSession("OPEN")}
+//                 disabled={!isOpenResultActive}
 //               >
 //                 <Typography
 //                   weight="600"
 //                   style={[
 //                     styles.sessionText,
 //                     session === "OPEN" && styles.sessionTextActive,
+//                     !isOpenResultActive && styles.sessionTextDisabled,
 //                   ]}
 //                 >
 //                   OPEN
 //                 </Typography>
 //               </TouchableOpacity>
+
 //               <TouchableOpacity
 //                 style={[
 //                   styles.sessionBtn,
 //                   session === "CLOSE" && styles.sessionBtnActive,
+//                   !isCloseResultActive && styles.sessionBtnDisabled,
 //                 ]}
 //                 onPress={() => setSession("CLOSE")}
+//                 disabled={!isCloseResultActive}
 //               >
 //                 <Typography
 //                   weight="600"
 //                   style={[
 //                     styles.sessionText,
 //                     session === "CLOSE" && styles.sessionTextActive,
+//                     !isCloseResultActive && styles.sessionTextDisabled,
 //                   ]}
 //                 >
 //                   CLOSE
@@ -1069,8 +1581,14 @@
 //     backgroundColor: theme.colors.primary + "15",
 //     borderColor: theme.colors.primary,
 //   },
+//   sessionBtnDisabled: {
+//     backgroundColor: theme.colors.background,
+//     borderColor: theme.colors.border,
+//     opacity: 0.4,
+//   },
 //   sessionText: { color: theme.colors.textMuted, fontSize: 14 },
 //   sessionTextActive: { color: theme.colors.primary },
+//   sessionTextDisabled: { color: theme.colors.textMuted },
 
 //   numberInput: {
 //     backgroundColor: theme.colors.background,
@@ -1091,14 +1609,36 @@
 //     alignItems: "center",
 //   },
 //   submitBtnText: { color: "#fff", fontSize: 16, letterSpacing: 1 },
+//   tabContainer: {
+//     flexDirection: "row",
+//     backgroundColor: theme.colors.surface,
+//     paddingHorizontal: theme.spacing.m,
+//     paddingVertical: 8,
+//     borderBottomWidth: 1,
+//     borderBottomColor: theme.colors.border,
+//     gap: 10,
+//   },
+//   tabBtn: {
+//     flex: 1,
+//     paddingVertical: 10,
+//     borderRadius: theme.radius.m,
+//     alignItems: "center",
+//     backgroundColor: theme.colors.background,
+//     borderWidth: 1,
+//     borderColor: theme.colors.border,
+//   },
+//   tabBtnActive: {
+//     backgroundColor: theme.colors.primary,
+//     borderColor: theme.colors.primary,
+//   },
+//   tabText: {
+//     fontSize: 14,
+//     color: theme.colors.textMuted,
+//   },
+//   tabTextActive: {
+//     color: "#FFFFFF",
+//   },
 // });
-
-
-
-
-
-
-
 
 
 
@@ -1162,7 +1702,6 @@ const checkIsMarketOpenRightNow = (openTimeStr, closeTimeStr, isActive) => {
   return now >= openDate && now <= closeDate;
 };
 
-// Helper function to check if a specific time has passed today
 const hasTimePassed = (timeStr) => {
   if (!timeStr) return false;
 
@@ -1177,6 +1716,7 @@ const hasTimePassed = (timeStr) => {
 export default function AdminMarketsScreen() {
   const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("MAIN"); // "MAIN" | "GALI_DESAWAR"
 
   // Declare Result Modal State
   const [declareModalVisible, setDeclareModalVisible] = useState(false);
@@ -1192,6 +1732,8 @@ export default function AdminMarketsScreen() {
   const [editCloseTime, setEditCloseTime] = useState("");
   const [editOpenResultTime, setEditOpenResultTime] = useState("");
   const [editCloseResultTime, setEditCloseResultTime] = useState("");
+  const [editResultTime, setEditResultTime] = useState("");
+  const [showEditResultPicker, setShowEditResultPicker] = useState(false);
   const [editIsActive, setEditIsActive] = useState(true);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
@@ -1202,99 +1744,163 @@ export default function AdminMarketsScreen() {
   const [newCloseTime, setNewCloseTime] = useState("");
   const [newOpenResultTime, setNewOpenResultTime] = useState("");
   const [newCloseResultTime, setNewCloseResultTime] = useState("");
+  const [newResultTime, setNewResultTime] = useState("");
+  const [showResultPicker, setShowResultPicker] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   // Time Pickers for Add Market
   const [showOpenPicker, setShowOpenPicker] = useState(false);
   const [showClosePicker, setShowClosePicker] = useState(false);
 
-  const fetchMarkets = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get("/admin/all");
-      setMarkets(response.data);
-    } catch (error) {
-      try {
-        const fallbackRes = await api.get("/markets");
-        setMarkets(fallbackRes.data);
-      } catch (err) {
-        Alert.alert("Error", "Failed to fetch markets");
-      }
-    } finally {
-      setLoading(false);
-    }
+  // --- TAB & FETCH LOGIC ---
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    fetchMarkets(tab);
   };
+
+  // const fetchMarkets = async (targetTab = activeTab) => {
+  //   setLoading(true);
+  //   try {
+  //     const endpoint =
+  //       targetTab === "GALI_DESAWAR"
+  //         ? "/admin/gali-desawar/markets"
+  //         : "/admin/all";
+
+  //     const response = await api.get(endpoint);
+  //     setMarkets(response.data);
+  //   } catch (error) {
+  //     try {
+  //       const fallbackEndpoint =
+  //         targetTab === "GALI_DESAWAR"
+  //           ? "/admin/gali-desawar/markets"
+  //           : "/admin/all";
+
+  //       const fallbackRes = await api.get(fallbackEndpoint);
+  //       setMarkets(fallbackRes.data);
+  //     } catch (err) {
+  //       setMarkets([]);
+  //       Alert.alert("Error", "Failed to fetch markets");
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+//   const fetchMarkets = async (targetTab = activeTab) => {
+//   setLoading(true);
+//   try {
+//     const endpoint =
+//       targetTab === "GALI_DESAWAR"
+//         ? "/gali-desawar/markets"
+//         : "/admin/all";
+
+//     const response = await api.get(endpoint);
+//     setMarkets(response.data);
+//   } catch (error) {
+//     try {
+//       const fallbackEndpoint =
+//         targetTab === "GALI_DESAWAR"
+//           ? "/gali-desawar/markets"
+//           : "/markets";
+
+//       const fallbackRes = await api.get(fallbackEndpoint);
+//       setMarkets(fallbackRes.data);
+//     } catch (err) {
+//       setMarkets([]);
+//       Alert.alert("Error", "Failed to fetch markets");
+//     }
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+  const fetchMarkets = async (targetTab = activeTab) => {
+  setLoading(true);
+  try {
+    const endpoint =
+      targetTab === "GALI_DESAWAR"
+        ? "/gali-desawar/markets"
+        : "/admin/all";
+
+    const response = await api.get(endpoint);
+    setMarkets(response.data);
+  } catch (error) {
+    try {
+      const fallbackEndpoint =
+        targetTab === "GALI_DESAWAR"
+          ? "/gali-desawar/markets"
+          : "/markets";
+
+      const fallbackRes = await api.get(fallbackEndpoint);
+      setMarkets(fallbackRes.data);
+    } catch (err) {
+      setMarkets([]);
+      Alert.alert("Error", "Failed to fetch markets");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   useFocusEffect(
     useCallback(() => {
-      fetchMarkets();
-    }, []),
+      fetchMarkets(activeTab);
+    }, [activeTab])
   );
 
   // --- TOGGLE / PAUSE MARKET ---
-  const handleToggleActive = async (market) => {
-    const updatedStatus = !market.is_active;
+  // const handleToggleActive = async (market) => {
+  //   const updatedStatus = !market.is_active;
 
-    setMarkets((prev) =>
-      prev.map((m) =>
-        m.id === market.id ? { ...m, is_active: updatedStatus } : m,
-      ),
-    );
+  //   setMarkets((prev) =>
+  //     prev.map((m) =>
+  //       m.id === market.id ? { ...m, is_active: updatedStatus } : m
+  //     )
+  //   );
 
-    try {
-      await api.patch(`/markets/toggle-status/${market.id}`, {
-        is_active: updatedStatus,
-      });
-    } catch (error) {
-      try {
-        await api.put(`/admin/markets/${market.id}`, {
-          is_active: updatedStatus,
-        });
-      } catch (err) {
-        try {
-          await api.put(`/markets/update/${market.id}`, {
-            is_active: updatedStatus,
-          });
-        } catch (finalErr) {
-          Alert.alert("Failed", "Could not update market status.");
-          fetchMarkets();
-        }
-      }
-    }
-  };
+  //   const endpoint =
+  //     activeTab === "GALI_DESAWAR"
+  //       ? `/admin/gali-desawar/markets/${market.id}/status`
+  //       : `/markets/toggle-status/${market.id}`;
 
-  // --- DELETE MARKET ---
-  const handleDeleteMarket = (market) => {
-    Alert.alert(
-      "Delete Market",
-      `Are you sure you want to delete "${market.name}"? This action cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.delete(`/markets/delete/${market.id}`);
-              fetchMarkets();
-            } catch (error) {
-              try {
-                await api.delete(`/admin/markets/${market.id}`);
-                fetchMarkets();
-              } catch (err) {
-                try {
-                  await api.delete(`/markets/${market.id}`);
-                  fetchMarkets();
-                } catch (finalErr) {
-                  Alert.alert("Error", "Failed to delete market.");
-                }
-              }
-            }
-          },
-        },
-      ],
-    );
-  };
+  //   try {
+  //     if (activeTab === "GALI_DESAWAR") {
+  //       await api.patch(endpoint, { status: updatedStatus ? "ACTIVE" : "PAUSED" });
+  //     } else {
+  //       await api.patch(endpoint, { is_active: updatedStatus });
+  //     }
+  //   } catch (error) {
+  //     Alert.alert("Failed", "Could not update market status.");
+  //     fetchMarkets(activeTab);
+  //   }
+  // };
+
+  // // --- DELETE MARKET ---
+  // const handleDeleteMarket = (market) => {
+  //   Alert.alert(
+  //     "Delete Market",
+  //     `Are you sure you want to delete "${market.name}"? This action cannot be undone.`,
+  //     [
+  //       { text: "Cancel", style: "cancel" },
+  //       {
+  //         text: "Delete",
+  //         style: "destructive",
+  //         onPress: async () => {
+  //           const endpoint =
+  //             activeTab === "GALI_DESAWAR"
+  //               ? `/admin/gali-desawar/markets/${market.id}`
+  //               : `/markets/delete/${market.id}`;
+  //           try {
+  //             await api.delete(endpoint);
+  //             fetchMarkets(activeTab);
+  //           } catch (error) {
+  //             Alert.alert("Error", "Failed to delete market.");
+  //           }
+  //         },
+  //       },
+  //     ]
+  //   );
+  // };
 
   // --- TIME PICKER HELPERS ---
   const formatTime = (date) => {
@@ -1317,42 +1923,67 @@ export default function AdminMarketsScreen() {
     }
   };
 
-  // --- CREATE MARKET ---
-  const handleCreateMarket = async () => {
-    if (!newName.trim() || !newOpenTime || !newCloseTime) {
-      Alert.alert("Validation Error", "Please enter market name and betting times.");
-      return;
-    }
-
-    setIsCreating(true);
-    const payload = {
-      name: newName,
-      open_time: newOpenTime,
-      close_time: newCloseTime,
-      open_result_time: newOpenResultTime || newOpenTime,
-      close_result_time: newCloseResultTime || newCloseTime,
-    };
-
-    try {
-      await api.post("/markets/add", payload);
-      Alert.alert("Success", "New market created!");
-      setAddModalVisible(false);
-      resetNewMarketForm();
-      fetchMarkets();
-    } catch (error) {
-      try {
-        await api.post("/admin/markets", payload);
-        Alert.alert("Success", "New market created!");
-        setAddModalVisible(false);
-        resetNewMarketForm();
-        fetchMarkets();
-      } catch (err) {
-        Alert.alert("Error", err.response?.data?.error || "Failed to create market.");
-      }
-    } finally {
-      setIsCreating(false);
+  const onResultTimeChange = (event, selectedDate) => {
+    setShowResultPicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setNewResultTime(formatTime(selectedDate));
     }
   };
+
+  const onEditResultTimeChange = (event, selectedDate) => {
+    setShowEditResultPicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setEditResultTime(formatTime(selectedDate));
+    }
+  };
+
+  // --- CREATE MARKET ---
+  // const handleCreateMarket = async () => {
+  //   if (!newName.trim() || !newOpenTime || !newCloseTime) {
+  //     Alert.alert("Validation Error", "Please enter market name and betting times.");
+  //     return;
+  //   }
+
+  //   if (activeTab === "GALI_DESAWAR" && !newResultTime) {
+  //     Alert.alert("Validation Error", "Please select a result time.");
+  //     return;
+  //   }
+
+  //   setIsCreating(true);
+
+  //   const payload =
+  //     activeTab === "GALI_DESAWAR"
+  //       ? {
+  //           name: newName,
+  //           open_time: newOpenTime,
+  //           close_time: newCloseTime,
+  //           result_time: newResultTime,
+  //         }
+  //       : {
+  //           name: newName,
+  //           open_time: newOpenTime,
+  //           close_time: newCloseTime,
+  //           open_result_time: newOpenResultTime || newOpenTime,
+  //           close_result_time: newCloseResultTime || newCloseTime,
+  //         };
+
+  //   const endpoint =
+  //     activeTab === "GALI_DESAWAR"
+  //       ? "/admin/gali-desawar/markets"
+  //       : "/markets/add";
+
+  //   try {
+  //     await api.post(endpoint, payload);
+  //     Alert.alert("Success", "New market created!");
+  //     setAddModalVisible(false);
+  //     resetNewMarketForm();
+  //     fetchMarkets(activeTab);
+  //   } catch (error) {
+  //     Alert.alert("Error", error.response?.data?.error || "Failed to create market.");
+  //   } finally {
+  //     setIsCreating(false);
+  //   }
+  // };
 
   const resetNewMarketForm = () => {
     setNewName("");
@@ -1360,6 +1991,7 @@ export default function AdminMarketsScreen() {
     setNewCloseTime("");
     setNewOpenResultTime("");
     setNewCloseResultTime("");
+    setNewResultTime("");
   };
 
   // --- EDIT MARKET ---
@@ -1370,46 +2002,55 @@ export default function AdminMarketsScreen() {
     setEditCloseTime(market.close_time || "");
     setEditOpenResultTime(market.open_result_time || market.open_time || "");
     setEditCloseResultTime(market.close_result_time || market.close_time || "");
+    setEditResultTime(market.result_time || "");
     setEditIsActive(market.is_active ?? true);
     setEditModalVisible(true);
   };
 
-  const handleSaveEditMarket = async () => {
-    if (!editName.trim()) {
-      Alert.alert("Validation Error", "Market name cannot be empty.");
-      return;
-    }
+  // const handleSaveEditMarket = async () => {
+  //   if (!editName.trim()) {
+  //     Alert.alert("Validation Error", "Market name cannot be empty.");
+  //     return;
+  //   }
 
-    setIsSavingEdit(true);
-    const payload = {
-      name: editName,
-      open_time: editOpenTime,
-      close_time: editCloseTime,
-      open_result_time: editOpenResultTime,
-      close_result_time: editCloseResultTime,
-      is_active: editIsActive,
-    };
+  //   setIsSavingEdit(true);
 
-    try {
-      await api.put(`/admin/markets/${selectedMarket.id}`, payload);
-      Alert.alert("Success", "Market updated successfully!");
-      setEditModalVisible(false);
-      fetchMarkets();
-    } catch (error) {
-      try {
-        await api.put(`/markets/update/${selectedMarket.id}`, payload);
-        Alert.alert("Success", "Market updated successfully!");
-        setEditModalVisible(false);
-        fetchMarkets();
-      } catch (err) {
-        Alert.alert("Error", "Failed to update market.");
-      }
-    } finally {
-      setIsSavingEdit(false);
-    }
-  };
+  //   const payload =
+  //     activeTab === "GALI_DESAWAR"
+  //       ? {
+  //           name: editName,
+  //           open_time: editOpenTime,
+  //           close_time: editCloseTime,
+  //           result_time: editResultTime,
+  //           is_active: editIsActive,
+  //         }
+  //       : {
+  //           name: editName,
+  //           open_time: editOpenTime,
+  //           close_time: editCloseTime,
+  //           open_result_time: editOpenResultTime,
+  //           close_result_time: editCloseResultTime,
+  //           is_active: editIsActive,
+  //         };
 
-  // --- DECLARE RESULT (MANUAL DISTRIBUTION) ---
+  //   const endpoint =
+  //     activeTab === "GALI_DESAWAR"
+  //       ? `/admin/gali-desawar/markets/${selectedMarket.id}`
+  //       : `/admin/markets/${selectedMarket.id}`;
+
+  //   try {
+  //     await api.put(endpoint, payload);
+  //     Alert.alert("Success", "Market updated successfully!");
+  //     setEditModalVisible(false);
+  //     fetchMarkets(activeTab);
+  //   } catch (error) {
+  //     Alert.alert("Error", "Failed to update market.");
+  //   } finally {
+  //     setIsSavingEdit(false);
+  //   }
+  // };
+
+  // --- DECLARE RESULT ---
   const openDeclareModal = (market) => {
     setSelectedMarket(market);
     setWinningNumber("");
@@ -1417,7 +2058,6 @@ export default function AdminMarketsScreen() {
     const isOpenTimePassed = hasTimePassed(market.open_result_time || market.open_time);
     const isCloseTimePassed = hasTimePassed(market.close_result_time || market.close_time);
 
-    // Auto-select session based on which result timing has passed
     if (isCloseTimePassed) {
       setSession("CLOSE");
     } else if (isOpenTimePassed) {
@@ -1437,39 +2077,239 @@ export default function AdminMarketsScreen() {
 
     Alert.alert(
       "Confirm Result Declaration",
-      `Are you sure you want to declare ${winningNumber} as the ${session} result for ${selectedMarket.name}?\n\nNote: Funds will NOT be auto-distributed.`,
+      `Are you sure you want to declare ${winningNumber} as the ${
+        activeTab === "GALI_DESAWAR" ? "" : session
+      } result for ${selectedMarket.name}?\n\nNote: Funds will NOT be auto-distributed.`,
       [
         { text: "Cancel", style: "cancel" },
         { text: "Yes, Declare", style: "default", onPress: submitResult },
-      ],
+      ]
     );
   };
 
-  const submitResult = async () => {
-    setIsSubmitting(true);
-    try {
-      const response = await api.post("/admin/markets/declare-result", {
-        market_id: selectedMarket.id,
-        session: session,
-        winning_number: winningNumber,
-        auto_distribute: false,
-        distribute_funds: false,
-      });
+  
 
-      Alert.alert(
-        "Result Published",
-        `${response.data.message || "Result updated successfully."}\n\nNote: Automatic payout is disabled. Please distribute winnings manually.`,
-      );
-      setDeclareModalVisible(false);
-      fetchMarkets();
-    } catch (error) {
-      Alert.alert("Error", error.response?.data?.error || "Failed to declare result.");
-    } finally {
-      setIsSubmitting(false);
+  // const submitResult = async () => {
+  //   setIsSubmitting(true);
+  //   const endpoint =
+  //     activeTab === "GALI_DESAWAR"
+  //       ? "/admin/gali-desawar/declare-result"
+  //       : "/admin/markets/declare-result";
+
+  //   const payload =
+  //     activeTab === "GALI_DESAWAR"
+  //       ? {
+  //           market_id: selectedMarket.id,
+  //           winning_number: winningNumber,
+  //           auto_distribute: false,
+  //         }
+  //       : {
+  //           market_id: selectedMarket.id,
+  //           session: session,
+  //           winning_number: winningNumber,
+  //           auto_distribute: false,
+  //           distribute_funds: false,
+  //         };
+
+  //   try {
+  //     const response = await api.post(endpoint, payload);
+
+  //     Alert.alert(
+  //       "Result Published",
+  //       `${response.data.message || "Result updated successfully."}\n\nNote: Automatic payout is disabled. Please distribute winnings manually.`
+  //     );
+  //     setDeclareModalVisible(false);
+  //     fetchMarkets(activeTab);
+  //   } catch (error) {
+  //     Alert.alert("Error", error.response?.data?.error || "Failed to declare result.");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  // --- TOGGLE ACTIVE / PAUSE ---
+const handleToggleActive = async (market) => {
+  const updatedStatus = !market.is_active;
+
+  setMarkets((prev) =>
+    prev.map((m) =>
+      m.id === market.id ? { ...m, is_active: updatedStatus } : m
+    )
+  );
+
+  const endpoint =
+    activeTab === "GALI_DESAWAR"
+      ? `/gali-desawar/markets/${market.id}/status`
+      : `/markets/toggle-status/${market.id}`;
+
+  try {
+    if (activeTab === "GALI_DESAWAR") {
+      await api.patch(endpoint, { status: updatedStatus ? "ACTIVE" : "PAUSED" });
+    } else {
+      await api.patch(endpoint, { is_active: updatedStatus });
     }
-  };
+  } catch (error) {
+    Alert.alert("Failed", "Could not update market status.");
+    fetchMarkets(activeTab);
+  }
+};
 
-  // Check result session status for currently selected market
+// --- DELETE MARKET ---
+const handleDeleteMarket = (market) => {
+  Alert.alert(
+    "Delete Market",
+    `Are you sure you want to delete "${market.name}"? This action cannot be undone.`,
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          const endpoint =
+            activeTab === "GALI_DESAWAR"
+              ? `/gali-desawar/markets/${market.id}`
+              : `/markets/delete/${market.id}`;
+          try {
+            await api.delete(endpoint);
+            fetchMarkets(activeTab);
+          } catch (error) {
+            Alert.alert("Error", "Failed to delete market.");
+          }
+        },
+      },
+    ]
+  );
+};
+
+// --- CREATE MARKET ---
+const handleCreateMarket = async () => {
+  if (!newName.trim() || !newOpenTime || !newCloseTime) {
+    Alert.alert("Validation Error", "Please enter market name and betting times.");
+    return;
+  }
+
+  if (activeTab === "GALI_DESAWAR" && !newResultTime) {
+    Alert.alert("Validation Error", "Please select a result time.");
+    return;
+  }
+
+  setIsCreating(true);
+
+  const payload =
+    activeTab === "GALI_DESAWAR"
+      ? {
+          name: newName,
+          open_time: newOpenTime,
+          close_time: newCloseTime,
+          result_time: newResultTime,
+        }
+      : {
+          name: newName,
+          open_time: newOpenTime,
+          close_time: newCloseTime,
+          open_result_time: newOpenResultTime || newOpenTime,
+          close_result_time: newCloseResultTime || newCloseTime,
+        };
+
+  const endpoint =
+    activeTab === "GALI_DESAWAR"
+      ? "/gali-desawar/markets"
+      : "/markets/add";
+
+  try {
+    await api.post(endpoint, payload);
+    Alert.alert("Success", "New market created!");
+    setAddModalVisible(false);
+    resetNewMarketForm();
+    fetchMarkets(activeTab);
+  } catch (error) {
+    Alert.alert("Error", error.response?.data?.error || "Failed to create market.");
+  } finally {
+    setIsCreating(false);
+  }
+};
+
+// --- SAVE EDIT MARKET ---
+const handleSaveEditMarket = async () => {
+  if (!editName.trim()) {
+    Alert.alert("Validation Error", "Market name cannot be empty.");
+    return;
+  }
+
+  setIsSavingEdit(true);
+
+  const payload =
+    activeTab === "GALI_DESAWAR"
+      ? {
+          name: editName,
+          open_time: editOpenTime,
+          close_time: editCloseTime,
+          result_time: editResultTime,
+          is_active: editIsActive,
+        }
+      : {
+          name: editName,
+          open_time: editOpenTime,
+          close_time: editCloseTime,
+          open_result_time: editOpenResultTime,
+          close_result_time: editCloseResultTime,
+          is_active: editIsActive,
+        };
+
+  const endpoint =
+    activeTab === "GALI_DESAWAR"
+      ? `/gali-desawar/markets/${selectedMarket.id}`
+      : `/admin/markets/${selectedMarket.id}`;
+
+  try {
+    await api.put(endpoint, payload);
+    Alert.alert("Success", "Market updated successfully!");
+    setEditModalVisible(false);
+    fetchMarkets(activeTab);
+  } catch (error) {
+    Alert.alert("Error", "Failed to update market.");
+  } finally {
+    setIsSavingEdit(false);
+  }
+};
+
+// --- DECLARE RESULT ---
+const submitResult = async () => {
+  setIsSubmitting(true);
+  const endpoint =
+    activeTab === "GALI_DESAWAR"
+      ? "/gali-desawar/declare-result"
+      : "/admin/markets/declare-result";
+
+  const payload =
+    activeTab === "GALI_DESAWAR"
+      ? {
+          market_id: selectedMarket.id,
+          winning_number: winningNumber,
+          auto_distribute: false,
+        }
+      : {
+          market_id: selectedMarket.id,
+          session: session,
+          winning_number: winningNumber,
+          auto_distribute: false,
+          distribute_funds: false,
+        };
+
+  try {
+    const response = await api.post(endpoint, payload);
+    Alert.alert(
+      "Result Published",
+      `${response.data.message || "Result updated successfully."}\n\nNote: Automatic payout is disabled. Please distribute winnings manually.`
+    );
+    setDeclareModalVisible(false);
+    fetchMarkets(activeTab);
+  } catch (error) {
+    Alert.alert("Error", error.response?.data?.error || "Failed to declare result.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   const isOpenResultActive = selectedMarket
     ? hasTimePassed(selectedMarket.open_result_time || selectedMarket.open_time)
     : false;
@@ -1482,7 +2322,7 @@ export default function AdminMarketsScreen() {
     const isTakingBetsRightNow = checkIsMarketOpenRightNow(
       item.open_time,
       item.close_time,
-      item.is_active,
+      item.is_active
     );
 
     return (
@@ -1516,6 +2356,11 @@ export default function AdminMarketsScreen() {
             <Typography style={styles.marketTime}>
               Open: {item.open_time} | Close: {item.close_time}
             </Typography>
+            {activeTab === "GALI_DESAWAR" && item.result_time && (
+              <Typography style={styles.marketTime}>
+                Result Time: {item.result_time}
+              </Typography>
+            )}
           </View>
 
           <View
@@ -1579,12 +2424,47 @@ export default function AdminMarketsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
+      {/* --- HEADER --- */}
       <View style={styles.header}>
         <Typography weight="700" style={styles.headerTitle}>
           Market Management
         </Typography>
       </View>
 
+      {/* --- TAB NAVIGATION --- */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabBtn, activeTab === "MAIN" && styles.tabBtnActive]}
+          onPress={() => handleTabChange("MAIN")}
+        >
+          <Typography
+            weight="700"
+            style={[styles.tabText, activeTab === "MAIN" && styles.tabTextActive]}
+          >
+            Main Markets
+          </Typography>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.tabBtn,
+            activeTab === "GALI_DESAWAR" && styles.tabBtnActive,
+          ]}
+          onPress={() => handleTabChange("GALI_DESAWAR")}
+        >
+          <Typography
+            weight="700"
+            style={[
+              styles.tabText,
+              activeTab === "GALI_DESAWAR" && styles.tabTextActive,
+            ]}
+          >
+            Gali Desawar
+          </Typography>
+        </TouchableOpacity>
+      </View>
+
+      {/* --- LIST / SPINNER --- */}
       {loading ? (
         <ActivityIndicator
           size="large"
@@ -1598,10 +2478,11 @@ export default function AdminMarketsScreen() {
           renderItem={renderMarketCard}
           contentContainerStyle={styles.listContent}
           refreshing={loading}
-          onRefresh={fetchMarkets}
+          onRefresh={() => fetchMarkets(activeTab)}
         />
       )}
 
+      {/* --- FAB --- */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setAddModalVisible(true)}
@@ -1624,13 +2505,14 @@ export default function AdminMarketsScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Typography weight="700" style={styles.modalTitle}>
-                New Market
+                New Market ({activeTab === "GALI_DESAWAR" ? "Gali Desawar" : "Main"})
               </Typography>
               <TouchableOpacity
                 onPress={() => {
                   setAddModalVisible(false);
                   setShowOpenPicker(false);
                   setShowClosePicker(false);
+                  setShowResultPicker(false);
                 }}
               >
                 <X color={theme.colors.textMuted} size={24} />
@@ -1701,31 +2583,68 @@ export default function AdminMarketsScreen() {
                 />
               )}
 
-              <Typography weight="700" style={styles.sectionHeader}>
-                Result Declaration Timing (Optional)
-              </Typography>
-              <View style={styles.timeRow}>
-                <View style={{ flex: 1, marginRight: 8 }}>
-                  <Typography style={styles.label}>Open Result Time</Typography>
-                  <TextInput
-                    style={styles.textInput}
-                    value={newOpenResultTime}
-                    onChangeText={setNewOpenResultTime}
-                    placeholder="08:05:00"
-                    placeholderTextColor={theme.colors.textMuted}
-                  />
-                </View>
-                <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Typography style={styles.label}>Close Result Time</Typography>
-                  <TextInput
-                    style={styles.textInput}
-                    value={newCloseResultTime}
-                    onChangeText={setNewCloseResultTime}
-                    placeholder="10:50:00"
-                    placeholderTextColor={theme.colors.textMuted}
-                  />
-                </View>
-              </View>
+              {/* CONDITIONAL RESULT DECLARATION TIMING */}
+              {activeTab === "GALI_DESAWAR" ? (
+                <>
+                  <Typography weight="700" style={styles.sectionHeader}>
+                    Result Declaration Timing
+                  </Typography>
+                  <TouchableOpacity
+                    style={styles.timeSelector}
+                    onPress={() => setShowResultPicker(true)}
+                  >
+                    <Typography
+                      style={{
+                        color: newResultTime
+                          ? theme.colors.textDark
+                          : theme.colors.textMuted,
+                      }}
+                    >
+                      {newResultTime
+                        ? `Result Time: ${newResultTime}`
+                        : "Select Result Time"}
+                    </Typography>
+                    <Clock color={theme.colors.textMuted} size={20} />
+                  </TouchableOpacity>
+
+                  {showResultPicker && (
+                    <DateTimePicker
+                      value={new Date()}
+                      mode="time"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={onResultTimeChange}
+                    />
+                  )}
+                </>
+              ) : (
+                <>
+                  <Typography weight="700" style={styles.sectionHeader}>
+                    Result Declaration Timing (Optional)
+                  </Typography>
+                  <View style={styles.timeRow}>
+                    <View style={{ flex: 1, marginRight: 8 }}>
+                      <Typography style={styles.label}>Open Result Time</Typography>
+                      <TextInput
+                        style={styles.textInput}
+                        value={newOpenResultTime}
+                        onChangeText={setNewOpenResultTime}
+                        placeholder="08:05:00"
+                        placeholderTextColor={theme.colors.textMuted}
+                      />
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 8 }}>
+                      <Typography style={styles.label}>Close Result Time</Typography>
+                      <TextInput
+                        style={styles.textInput}
+                        value={newCloseResultTime}
+                        onChangeText={setNewCloseResultTime}
+                        placeholder="10:50:00"
+                        placeholderTextColor={theme.colors.textMuted}
+                      />
+                    </View>
+                  </View>
+                </>
+              )}
 
               <TouchableOpacity
                 style={[styles.saveBtn, isCreating && { opacity: 0.7 }]}
@@ -1817,31 +2736,67 @@ export default function AdminMarketsScreen() {
                 </View>
               </View>
 
-              <Typography weight="700" style={styles.sectionHeader}>
-                Result Declaration Timing
-              </Typography>
-              <View style={styles.timeRow}>
-                <View style={{ flex: 1, marginRight: 8 }}>
-                  <Typography style={styles.label}>Open Result Time</Typography>
-                  <TextInput
-                    style={styles.textInput}
-                    value={editOpenResultTime}
-                    onChangeText={setEditOpenResultTime}
-                    placeholder="08:05:00"
-                    placeholderTextColor={theme.colors.textMuted}
-                  />
-                </View>
-                <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Typography style={styles.label}>Close Result Time</Typography>
-                  <TextInput
-                    style={styles.textInput}
-                    value={editCloseResultTime}
-                    onChangeText={setEditCloseResultTime}
-                    placeholder="10:50:00"
-                    placeholderTextColor={theme.colors.textMuted}
-                  />
-                </View>
-              </View>
+              {activeTab === "GALI_DESAWAR" ? (
+                <>
+                  <Typography weight="700" style={styles.sectionHeader}>
+                    Result Declaration Timing
+                  </Typography>
+                  <TouchableOpacity
+                    style={styles.timeSelector}
+                    onPress={() => setShowEditResultPicker(true)}
+                  >
+                    <Typography
+                      style={{
+                        color: editResultTime
+                          ? theme.colors.textDark
+                          : theme.colors.textMuted,
+                      }}
+                    >
+                      {editResultTime
+                        ? `Result Time: ${editResultTime}`
+                        : "Select Result Time"}
+                    </Typography>
+                    <Clock color={theme.colors.textMuted} size={20} />
+                  </TouchableOpacity>
+
+                  {showEditResultPicker && (
+                    <DateTimePicker
+                      value={new Date()}
+                      mode="time"
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
+                      onChange={onEditResultTimeChange}
+                    />
+                  )}
+                </>
+              ) : (
+                <>
+                  <Typography weight="700" style={styles.sectionHeader}>
+                    Result Declaration Timing
+                  </Typography>
+                  <View style={styles.timeRow}>
+                    <View style={{ flex: 1, marginRight: 8 }}>
+                      <Typography style={styles.label}>Open Result Time</Typography>
+                      <TextInput
+                        style={styles.textInput}
+                        value={editOpenResultTime}
+                        onChangeText={setEditOpenResultTime}
+                        placeholder="08:05:00"
+                        placeholderTextColor={theme.colors.textMuted}
+                      />
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 8 }}>
+                      <Typography style={styles.label}>Close Result Time</Typography>
+                      <TextInput
+                        style={styles.textInput}
+                        value={editCloseResultTime}
+                        onChangeText={setEditCloseResultTime}
+                        placeholder="10:50:00"
+                        placeholderTextColor={theme.colors.textMuted}
+                      />
+                    </View>
+                  </View>
+                </>
+              )}
 
               <TouchableOpacity
                 style={[styles.saveBtn, isSavingEdit && { opacity: 0.7 }]}
@@ -1894,50 +2849,54 @@ export default function AdminMarketsScreen() {
               {selectedMarket?.name}
             </Typography>
 
-            <Typography style={styles.label}>Session</Typography>
-            <View style={styles.sessionToggleRow}>
-              <TouchableOpacity
-                style={[
-                  styles.sessionBtn,
-                  session === "OPEN" && styles.sessionBtnActive,
-                  !isOpenResultActive && styles.sessionBtnDisabled,
-                ]}
-                onPress={() => setSession("OPEN")}
-                disabled={!isOpenResultActive}
-              >
-                <Typography
-                  weight="600"
-                  style={[
-                    styles.sessionText,
-                    session === "OPEN" && styles.sessionTextActive,
-                    !isOpenResultActive && styles.sessionTextDisabled,
-                  ]}
-                >
-                  OPEN
-                </Typography>
-              </TouchableOpacity>
+            {activeTab === "MAIN" && (
+              <>
+                <Typography style={styles.label}>Session</Typography>
+                <View style={styles.sessionToggleRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.sessionBtn,
+                      session === "OPEN" && styles.sessionBtnActive,
+                      !isOpenResultActive && styles.sessionBtnDisabled,
+                    ]}
+                    onPress={() => setSession("OPEN")}
+                    disabled={!isOpenResultActive}
+                  >
+                    <Typography
+                      weight="600"
+                      style={[
+                        styles.sessionText,
+                        session === "OPEN" && styles.sessionTextActive,
+                        !isOpenResultActive && styles.sessionTextDisabled,
+                      ]}
+                    >
+                      OPEN
+                    </Typography>
+                  </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[
-                  styles.sessionBtn,
-                  session === "CLOSE" && styles.sessionBtnActive,
-                  !isCloseResultActive && styles.sessionBtnDisabled,
-                ]}
-                onPress={() => setSession("CLOSE")}
-                disabled={!isCloseResultActive}
-              >
-                <Typography
-                  weight="600"
-                  style={[
-                    styles.sessionText,
-                    session === "CLOSE" && styles.sessionTextActive,
-                    !isCloseResultActive && styles.sessionTextDisabled,
-                  ]}
-                >
-                  CLOSE
-                </Typography>
-              </TouchableOpacity>
-            </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.sessionBtn,
+                      session === "CLOSE" && styles.sessionBtnActive,
+                      !isCloseResultActive && styles.sessionBtnDisabled,
+                    ]}
+                    onPress={() => setSession("CLOSE")}
+                    disabled={!isCloseResultActive}
+                  >
+                    <Typography
+                      weight="600"
+                      style={[
+                        styles.sessionText,
+                        session === "CLOSE" && styles.sessionTextActive,
+                        !isCloseResultActive && styles.sessionTextDisabled,
+                      ]}
+                    >
+                      CLOSE
+                    </Typography>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
 
             <Typography style={styles.label}>Winning Number</Typography>
             <TextInput
@@ -1982,6 +2941,37 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   headerTitle: { fontSize: 24, color: theme.colors.textDark },
+
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    gap: 10,
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: theme.radius.m,
+    alignItems: "center",
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  tabBtnActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  tabText: {
+    fontSize: 14,
+    color: theme.colors.textMuted,
+  },
+  tabTextActive: {
+    color: "#FFFFFF",
+  },
+
   listContent: { padding: theme.spacing.m, paddingBottom: 100 },
 
   card: {
@@ -2112,115 +3102,106 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.m,
     marginBottom: 12,
   },
+  label: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    marginBottom: 4,
+    marginTop: 8,
+  },
+  labelNoMargin: { fontSize: 14, color: theme.colors.textDark },
+  textInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.m,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: theme.colors.textDark,
+    backgroundColor: theme.colors.background,
+  },
   timeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
-
-  textInput: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.m,
-    paddingHorizontal: 12,
-    height: 52,
-    fontSize: 15,
-    color: theme.colors.textDark,
-    marginBottom: 12,
-  },
-
   timeSelector: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.m,
     paddingHorizontal: 12,
-    height: 52,
-    marginBottom: 12,
+    paddingVertical: 12,
+    backgroundColor: theme.colors.background,
+    marginTop: 6,
   },
-
   saveBtn: {
     backgroundColor: theme.colors.primary,
     paddingVertical: 14,
-    borderRadius: theme.radius.l,
+    borderRadius: theme.radius.m,
     alignItems: "center",
-    marginTop: 16,
-    marginBottom: 24,
+    marginTop: 24,
+    marginBottom: 20,
   },
-  saveBtnText: { color: "#fff", fontSize: 15, letterSpacing: 1 },
+  saveBtnText: { color: "#fff", fontSize: 14 },
 
   infoBox: {
     flexDirection: "row",
     backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
     padding: 12,
     borderRadius: theme.radius.m,
-    marginBottom: 20,
+    marginBottom: 16,
     alignItems: "center",
   },
-  infoText: { color: "#1D4ED8", fontSize: 12, fontWeight: "600", flex: 1 },
-
-  label: {
-    fontSize: 13,
-    color: theme.colors.textMuted,
-    marginBottom: 6,
-  },
-  labelNoMargin: {
-    fontSize: 14,
-    color: theme.colors.textDark,
-  },
-  marketHighlight: {
-    fontSize: 22,
-    color: theme.colors.primary,
-    textTransform: "uppercase",
-    marginBottom: 8,
-  },
+  infoText: { flex: 1, fontSize: 12, color: "#1E40AF" },
+  marketHighlight: { fontSize: 16, color: theme.colors.textDark, marginBottom: 12 },
 
   sessionToggleRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
+    gap: 10,
+    marginBottom: 16,
   },
   sessionBtn: {
-    flex: 0.48,
-    paddingVertical: 12,
-    borderRadius: theme.radius.m,
+    flex: 1,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    borderRadius: theme.radius.m,
     alignItems: "center",
   },
   sessionBtnActive: {
-    backgroundColor: theme.colors.primary + "15",
+    backgroundColor: theme.colors.primary,
     borderColor: theme.colors.primary,
   },
   sessionBtnDisabled: {
     backgroundColor: theme.colors.background,
-    borderColor: theme.colors.border,
-    opacity: 0.4,
+    opacity: 0.5,
   },
-  sessionText: { color: theme.colors.textMuted, fontSize: 14 },
-  sessionTextActive: { color: theme.colors.primary },
+  sessionText: { color: theme.colors.textDark, fontSize: 14 },
+  sessionTextActive: { color: "#fff" },
   sessionTextDisabled: { color: theme.colors.textMuted },
 
   numberInput: {
-    backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.m,
-    fontSize: 32,
-    color: theme.colors.textDark,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 22,
+    fontWeight: "bold",
     textAlign: "center",
-    height: 70,
-    marginBottom: 20,
+    color: theme.colors.textDark,
+    backgroundColor: theme.colors.background,
+    marginVertical: 12,
   },
-
   submitBtn: {
     backgroundColor: theme.colors.primary,
-    paddingVertical: 16,
-    borderRadius: theme.radius.l,
+    paddingVertical: 14,
+    borderRadius: theme.radius.m,
     alignItems: "center",
+    marginTop: 12,
   },
-  submitBtnText: { color: "#fff", fontSize: 16, letterSpacing: 1 },
+  submitBtnText: { color: "#fff", fontSize: 14 },
 });
